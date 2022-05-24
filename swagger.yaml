@@ -1,0 +1,768 @@
+openapi: 3.0.0
+info:
+  title: CFT Engine V2
+  version: 2.1.0
+  description: Cloud File Transfer Engine (version 2)
+  contact:
+    name: CFT Team
+    email: enquiries_CFT@tech.gov.sg
+    url: cft.tech.gov.sg
+  license:
+    name: MIT
+    url: cft.tech.gov.sg
+servers:
+  - url: 'https://engine.cft2-stg.v2.cft.stack.gov.sg'
+    description: cft2-stg
+paths:
+  /:
+    get:
+      summary: Health Check
+      responses:
+        '200':
+          description: OK
+      operationId: get-index
+      security: []
+      description: Responds with HTTP 200 OK
+      tags:
+        - HealthCheck
+    parameters: []
+  /v2/auth:
+    post:
+      summary: Provides JWT-SPA-1 or JWT-Backend token
+      tags:
+        - Authentication
+      operationId: post-auth
+      description: 'Authenticate Applications, Provides JWT-SPA-1 for Application Type = spa and JWT-Backend for Application Type = backend'
+      parameters:
+        - schema:
+            type: string
+          in: header
+          name: workflowID
+          description: Unique Identifier for Workflow
+          required: true
+        - schema:
+            type: string
+          in: query
+          name: code_challenge
+          description: PKCE code challenge
+          required: true
+        - schema:
+            type: string
+          in: query
+          name: code_challenge_method
+          description: PKCE code challenge method
+          required: true
+        - schema:
+            type: string
+          in: query
+          name: application_type
+          description: Application type
+          required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/200-AuthResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/404'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+      security:
+        - BASIC_AUTH: []
+    parameters: []
+  /v2/token:
+    post:
+      summary: 'Provides JWT-SPA-2  token, requires JWT-SPA-1'
+      tags:
+        - Authentication
+      operationId: post-token
+      description: Provides JWT-SPA-2 for AppType = spa for exchange of JWT-SPA-1
+      parameters:
+        - schema:
+            type: string
+          in: header
+          name: code_verifier
+          description: PKCE code verifier
+          required: true
+      responses:
+        '200':
+          description: 'JWT-SPA-2 response '
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: access_token=abcde12345; Path=/; HttpOnly
+              description: access_token and session_id will be available in separate Set-Cookie headers
+            x-cft-trace-id:
+              schema:
+                type: string
+              description: CFT Trace id
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+      x-internal: false
+      security:
+        - AUTH_TOKEN: []
+    parameters: []
+  '/v2/workflows/{workflowID}/transactions/{transactionID}/files/{key}':
+    parameters:
+      - schema:
+          type: string
+        name: workflowID
+        in: path
+        description: Unique Identifier for Workflow
+        required: true
+      - schema:
+          type: string
+        name: transactionID
+        in: path
+        required: true
+        description: 'Unique Identifier for Transaction, use session_id from /token endpoint'
+      - schema:
+          type: string
+        name: key
+        in: path
+        required: true
+        description: File Name
+    get:
+      summary: 'Download an Object with Transaction, requires JWT-SPA-2'
+      responses:
+        '200':
+          $ref: '#/components/responses/200-DownloadFile'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+      operationId: download-transaction-files-key
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+      description: Retrieve a file from the workflow's key-value store by key
+      tags:
+        - Transactions
+      security:
+        - AUTH_TOKEN_SPA: []
+    put:
+      summary: 'Upload an Object with Transaction,  requires JWT-SPA-2'
+      operationId: upload-transaction-files-key
+      x-hapi-options:
+        payload:
+          output: stream
+          parse: false
+          maxBytes: 1073741824
+      responses:
+        '201':
+          $ref: '#/components/responses/201-UploadFile'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+          application/json:
+            schema:
+              type: string
+          application/xml:
+            schema:
+              type: string
+          application/zip:
+            schema:
+              type: string
+              format: binary
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+          image/jpg:
+            schema:
+              type: string
+              format: binary
+          text/plain:
+            schema:
+              type: string
+          text/html:
+            schema:
+              type: string
+          multipart/form-data:
+            schema:
+              type: string
+        description: Upload an Object
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+      description: Upload a file to the workflow's key-value store by key.
+      security:
+        - AUTH_TOKEN_SPA: []
+      tags:
+        - Transactions
+    head:
+      summary: 'Get File Metadata with Transaction, requires JWT-SPA-2'
+      operationId: describe-transaction-files-key
+      responses:
+        '200':
+          $ref: '#/components/responses/200-ReadFileMetadata'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+      description: Describe a file in the workflow's key-value store by key.
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+      security:
+        - AUTH_TOKEN_SPA: []
+      tags:
+        - Transactions
+  '/v2/workflows/{workflowID}/files/{key}':
+    parameters:
+      - schema:
+          type: string
+        name: workflowID
+        in: path
+        required: true
+        description: Unique Identifier for Workflow.
+      - schema:
+          type: string
+        name: key
+        in: path
+        required: true
+        description: File Name
+    get:
+      summary: 'Download an Object, requires JWT-Backend'
+      tags:
+        - Files
+      responses:
+        '200':
+          $ref: '#/components/responses/200-DownloadFile'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+      operationId: download-files-key
+      parameters: []
+      description: Retrieve a file from the workflow's key-value store by key.
+      security:
+        - AUTH_TOKEN: []
+    put:
+      summary: 'Upload an Object, requires JWT-Backend'
+      operationId: upload-files-key
+      x-hapi-options:
+        payload:
+          output: stream
+          parse: false
+          maxBytes: 1073741824
+      responses:
+        '201':
+          $ref: '#/components/responses/201-UploadFile'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+          application/json:
+            schema:
+              type: string
+          application/xml:
+            schema:
+              type: string
+          application/zip:
+            schema:
+              type: string
+              format: binary
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+          image/jpg:
+            schema:
+              type: string
+              format: binary
+          text/plain:
+            schema:
+              type: string
+          text/html:
+            schema:
+              type: string
+          multipart/form-data:
+            schema:
+              type: string
+        description: Upload an Object
+      parameters: []
+      description: Upload a file to the workflow's key-value store by key.
+      security:
+        - AUTH_TOKEN: []
+      tags:
+        - Files
+    head:
+      summary: 'Get File Metadata, requires JWT-Backend'
+      operationId: describe-files-key
+      responses:
+        '200':
+          $ref: '#/components/responses/200-ReadFileMetadata'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+      description: Describe a file in the workflow's key-value store by key.
+      parameters: []
+      security:
+        - AUTH_TOKEN: []
+      tags:
+        - Files
+  '/v2/workflows/{workflowID}/files':
+    parameters:
+      - schema:
+          type: string
+        name: workflowID
+        in: path
+        required: true
+        description: Unique Identifier for Workflow
+    get:
+      summary: 'List Files in Workflow, requires JWT-Backend'
+      tags:
+        - Files
+      responses:
+        '200':
+          $ref: '#/components/responses/200-ListFiles'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+      operationId: list-workflow-files
+      description: List the files stored in the specified workflow (by workflowID).
+      security:
+        - AUTH_TOKEN: []
+  '/v2/files/{fileID}':
+    parameters:
+      - schema:
+          type: string
+        name: fileID
+        in: path
+        required: true
+        description: Unique Identifier for File
+    get:
+      summary: 'Describe File, requires JWT-Backend'
+      tags:
+        - Files
+      responses:
+        '200':
+          $ref: '#/components/responses/200-ReadFileDetails'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+      operationId: describe-files-fileID
+      parameters: []
+      description: Describe a file by its unique file identifier (fileID)
+      security:
+        - AUTH_TOKEN: []
+  '/v2/files/{fileID}/download':
+    parameters:
+      - schema:
+          type: string
+        name: fileID
+        in: path
+        required: true
+        description: Unique Identifier for File
+    get:
+      summary: 'Download a file, requires JWT-Backend'
+      tags:
+        - Files
+      responses:
+        '200':
+          $ref: '#/components/responses/200-DownloadFile'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+      operationId: download-files-fileID
+      parameters: []
+      description: Download a file by its unique file identifier (fileID)
+      security:
+        - AUTH_TOKEN: []
+components:
+  schemas:
+    FileDetails:
+      type: object
+      title: FileDetails
+      description: File details object
+      x-examples:
+        example-1:
+          value:
+            key: string
+            contentType: string
+            fileID: string
+      additionalProperties: false
+      properties:
+        key:
+          type: string
+          description: File Key
+        contentType:
+          type: string
+          description: File Content-type
+        fileID:
+          type: string
+        status:
+          type: string
+        contentLength:
+          type: integer
+        tags:
+          type: object
+        metadata:
+          type: string
+      required:
+        - key
+        - contentType
+    Error:
+      type: object
+      title: Error
+      description: Error object
+      x-examples:
+        example-1:
+          value:
+            statuCode: string
+            error: string
+            message: string
+      properties:
+        statusCode:
+          type: number
+          description: HTTP status code.
+        error:
+          type: string
+          description: Error details.
+        message:
+          type: string
+          description: Error message.
+      required:
+        - statusCode
+        - error
+  securitySchemes:
+    BASIC_AUTH:
+      type: http
+      scheme: basic
+      description: ''
+    AUTH_TOKEN:
+      type: http
+      scheme: bearer
+    AUTH_TOKEN_SPA:
+      name: access_token
+      type: apiKey
+      in: cookie
+  responses:
+    '400':
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            example-1:
+              value:
+                statusCode: 400
+                error: Bad Request
+                message: Invalid request headers input
+      headers:
+        Content-Type:
+          schema:
+            type: string
+          description: application/json
+        x-cft-trace-id:
+          schema:
+            type: string
+          description: CFT Trace Id
+    '401':
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            example-1:
+              value:
+                statusCode: 401
+                error: Unauthorized
+                message: Invalid credentials
+      headers:
+        Content-Type:
+          schema:
+            type: string
+          description: application/json
+        x-cft-trace-id:
+          schema:
+            type: string
+          description: CFT Trace id
+    '403':
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            example-1:
+              value:
+                statusCode: 403
+                error: Forbidden
+                message: Insufficient scope
+      headers:
+        Content-Type:
+          schema:
+            type: string
+          description: application/json
+        x-cft-trace-id:
+          schema:
+            type: string
+          description: CFT Trace id
+    '404':
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            example-1:
+              value:
+                statusCode: 404
+                error: Not Found
+                message: Resource not found
+      headers:
+        Content-Type:
+          schema:
+            type: string
+          description: application/json
+        x-cft-trace-id:
+          schema:
+            type: string
+          description: CFT Trace id
+    '500':
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            example-1:
+              value:
+                statusCode: 500
+                error: Internal Server Error
+                message: An internal server error occurred
+      headers:
+        Content-Type:
+          schema:
+            type: string
+          description: application/json
+        x-cft-trace-id:
+          schema:
+            type: string
+          description: CFT Trace id
+    200-DownloadFile:
+      description: Download File Response.
+      headers:
+        x-cft-file-id:
+          schema:
+            type: string
+          description: CFT File Id
+        x-cft-trace-id:
+          schema:
+            type: string
+          description: CFT Trace Id
+        x-cft-file-metadata:
+          schema:
+            type: string
+          description: File Metadata
+    200-ListFiles:
+      description: List Files in Workflow
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              fileKeys:
+                type: array
+                items:
+                  type: string
+          examples:
+            example-1:
+              value:
+                fileKeys:
+                  - workflows/01G188Q43ZAV4GSSMATCC2F2DV/files/01G3HZ8VGXAV4GSSMATCC2F2DV/clip-2256-data-1871.csv
+      headers:
+        Content-Type:
+          schema:
+            type: string
+          description: application/json
+        x-cft-trace-id:
+          schema:
+            type: string
+          description: CFT Trace Id
+    201-UploadFile:
+      description: Upload File Object
+      headers:
+        x-cft-file-id:
+          schema:
+            type: string
+          description: CFT File Id
+        x-cft-trace-id:
+          schema:
+            type: string
+          description: CFT Trace id
+    200-ReadFileDetails:
+      description: Read File details response.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FileDetails'
+          examples:
+            example-1:
+              value:
+                contentLength: 50
+                contentType: text/plain
+                fileID: 01G3AF1208P6V9WWPBP9Y2B1BC
+                key: clip-9453-data-3444.csv
+                status: FileClean
+      headers:
+        Content-Type:
+          schema:
+            type: string
+          description: application/json
+        x-cft-trace-id:
+          schema:
+            type: string
+          description: CFT Trace Id
+    200-ReadFileMetadata:
+      description: Read File Metadata response.
+      headers:
+        x-cft-file-id:
+          schema:
+            type: string
+          description: CFT File id
+        x-cft-trace-id:
+          schema:
+            type: string
+          description: CFT Trace Id
+        x-cft-file-metadata:
+          schema:
+            type: string
+          description: File Metadata
+    200-AuthResponse:
+      description: JWT-SPA-1 response
+      content:
+        application/json:
+          schema:
+            description: ''
+            type: object
+            x-examples:
+              example-1:
+                access_token: '12345'
+                expires_in: 1800
+                token_type: bearer
+            properties:
+              access_token:
+                type: string
+              expires_in:
+                type: integer
+                format: int64
+              token_type:
+                type: string
+            required:
+              - access_token
+              - expires_in
+              - token_type
+          examples:
+            example-1:
+              value:
+                access_token: abc
+                expires_in: 1800
+                token_type: Bearer
+      headers:
+        x-cft-trace-id:
+          schema:
+            type: string
+          description: CFT Trace id
+        Content-Type:
+          schema:
+            type: string
+          description: application/json
+  parameters:
+    SessionID:
+      name: session_id
+      in: cookie
+      required: true
+      schema:
+        type: string
+      description: session_id from /token endpoint
+tags:
+  - name: Authentication
+  - name: Files
+  - name: HealthCheck
+  - name: Transactions
