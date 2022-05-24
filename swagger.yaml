@@ -113,8 +113,8 @@ paths:
               - access_token
               - expires_in
               - token_type
-           examples:
-             example-1:
+            examples:
+              example-1:
                value:
                 statusCode: 200
                 something1: SPA-2
