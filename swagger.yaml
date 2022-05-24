@@ -94,8 +94,25 @@ paths:
           content:
             application/json:
               schema:
-                description: 'Test'
+                description: ''
                 type: object
+                x-examples:
+                  example-1:
+                    access_token: '12345'
+                    expires_in: 1800
+                    token_type: bearer
+              properties:
+                access_token:
+                type: string
+              expires_in:
+                type: integer
+                format: int64
+              token_type:
+                type: string
+            required:
+              - access_token
+              - expires_in
+              - token_type
               examples:
                 example-1:
                   value:
