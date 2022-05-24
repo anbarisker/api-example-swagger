@@ -93,6 +93,9 @@ paths:
           description: JWT-SPA-2 response
           content:
             application/json:
+              schema:
+                description: 'Test'
+                type: object
               examples:
                 example-1:
                   value:
