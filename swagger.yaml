@@ -90,7 +90,7 @@ paths:
           required: true
       responses:
         '200':
-          description: 'JWT-SPA-2 response '
+          description: JWT-SPA-2 response
           headers:
             Set-Cookie:
               schema:
