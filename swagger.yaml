@@ -91,14 +91,34 @@ paths:
       responses:
         '200':
           description: JWT-SPA-2 response
-          content:
-            application/json:
-              examples:
-                example-1:
-                  value:
-                    statusCode: 200
-                    error: Unauthorized
-                    message: Invalid credentials
+content:
+        application/json:
+          schema:
+            description: ''
+            type: object
+            x-examples:
+              example-1:
+                access_token: '12345'
+                expires_in: 1800
+                token_type: bearer
+            properties:
+              access_token:
+                type: string
+              expires_in:
+                type: integer
+                format: int64
+              token_type:
+                type: string
+            required:
+              - access_token
+              - expires_in
+              - token_type
+          examples:
+            example-1:
+              value:
+                access_token: abc
+                expires_in: 1800
+                token_type: Bearer
           headers:
             Set-Cookie:
               schema:
