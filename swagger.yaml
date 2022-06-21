@@ -2,7 +2,7 @@ openapi: 3.0.0
 info:
   title: CFT Engine V2.0
   version: 2.1.0
-  description: Cloud File Transfer Engine (version 2)
+  description: Cloud File Transfer Engine (version 02)
   contact:
     name: CFT Team
     email: enquiries_CFT@tech.gov.sg
