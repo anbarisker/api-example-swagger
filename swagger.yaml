@@ -1,6 +1,6 @@
 openapi: 3.0.0
 info:
-  title: CFT Engine V22.0
+  title: CFT Engine V2.0
   version: 2.1.0
   description: Cloud File Transfer Engine (version 02)
   contact:
