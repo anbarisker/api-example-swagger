@@ -5,13 +5,13 @@ info:
   description: Cloud File Transfer Engine (version 02)
   contact:
     name: CFT Team 1
-    email: enquiries_CFT@tech.gov.sg
+    email: enquiries.sg
     url: cft.tech.gov.sg
   license:
     name: MIT
     url: cft.tech.gov.sg
 servers:
-  - url: 'https://engine.cft2-stg.v2.cft.stack.gov.sg'
+  - url: 'https://engine.com.sg'
     description: cft2-stg
 paths:
   /:
