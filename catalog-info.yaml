@@ -3,7 +3,6 @@ kind: Component
 metadata:
   name: api-example-swagger
   annotations:
-    backstage.io/techdocs-ref: value
     github.com/project-slug: anbarisker/api-example-swagger
 spec:
   type: other
