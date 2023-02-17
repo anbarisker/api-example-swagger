@@ -1,0 +1,10 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: api-example-swagger
+  annotations:
+    github.com/project-slug: anbarisker/api-example-swagger
+spec:
+  type: other
+  lifecycle: unknown
+  owner: guests
