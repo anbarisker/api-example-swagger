@@ -4,6 +4,7 @@ metadata:
   name: api-example-swagger
   annotations:
     github.com/project-slug: anbarisker/api-example-swagger
+    backstage.io/techdocs-ref: swagger.json
 spec:
   type: other
   lifecycle: unknown
